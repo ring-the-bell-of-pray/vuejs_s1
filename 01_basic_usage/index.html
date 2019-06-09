@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Basic Usage Vuejs</title>
+    <script src="https://unpkg.com/vue@2.5.17"></script>
+    <style>
+        .error {
+            color:red
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <p>{{ items[0].name }} : {{ items[0].price }} X {{ items[0].quantity }}</p>
+    <p>합계 : {{ totalPrice | numberWithDelimiter }}</p>
+    <p>합계(세금포함) : {{ totalPriceWithTax | numberWithDelimiter}}</p>
+    <p v-show="!canBuy" :class="errorMsgClass">
+        {{ 1000 | numberWithDelimiter }}이상 부터 구매가 가능함.
+    </p>
+
+    <div>
+        <ul>
+            <li v-for="item in items" :key="item.name">
+                {{ item.name }}의 갯수 :
+                <input v-model.lazy="item.quantity" type="number" min="0" />
+            </li>
+        </ul>
+    </div>
+
+    <div>
+        <ul>
+            <li v-for="item in items" :key="item.name">
+                {{ item.name }} : {{ item.price }} X {{ item.quantity }} = {{ item.price * item.quantity | numberWithDelimiter }}원
+            </li>
+        </ul>
+    </div>
+
+    <button :disabled="!canBuy" @click.prevent="doBuy($event)">구매</button>
+</div>
+<script>
+    // Vue변수가 전역 변수로 존재하는지 확인
+    console.assert(typeof Vue !== 'undefined');
+
+    const items = [{
+        name: '연필',
+        price: 300,
+        quantity: 1,
+    }, {
+        name: '공책',
+        price: 400,
+        quantity: 0,
+    }, {
+        name: '지우개',
+        price: 100,
+        quantity: 0,
+    }];
+
+    let msg = new Vue({
+        el: '#app',
+        data: _ => ({
+            items: items
+        }),
+        computed: {
+            totalPrice: function() {
+                return this.items.reduce((sum, item) => {
+                    return sum + (item.price * item.quantity);
+                }, 0);
+            },
+            totalPriceWithTax: function() {
+                return Math.floor(this.totalPrice * 1.10);
+            },
+            canBuy: function() {
+                return this.totalPrice >= 1000;
+            },
+            errorMsgClass: function() {
+                return {
+                    error: !this.canBuy
+                }
+            }
+        },
+        filters: {
+            numberWithDelimiter: value => {
+                if(!value) {
+                    return '0';
+                }
+
+                return value.toString().replace(/(\d)(?=(\d{3})+$)/g, '$1,');
+            }
+        },
+        methods: {
+            doBuy: function(evt) {
+                alert(`${this.totalPriceWithTax}원 판매됨`);
+                this.items.forEach(item => {
+                   item.quantity = 0;
+                });
+            }
+        }
+    });
+</script>
+</body>
+</html>
